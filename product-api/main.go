@@ -1,27 +1,53 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"time"
+
+	"github.com/zakisk/microservice/product-api/handlers"
 )
 
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		data, err := ioutil.ReadAll(r.Body)
+	l := log.New(os.Stdout, "product-api:", log.LstdFlags)
+
+	//create the new handler
+	ph := handlers.NewProducts(l)
+
+
+	//creating our new ServeMux
+	sm := http.NewServeMux()
+
+	sm.Handle("/", ph)
+
+	//creating my own server in order to set the fields as per my requirement
+	s := &http.Server{
+		Addr: ":9090",
+		Handler: sm,
+		IdleTimeout: 120 * time.Second,
+		ReadTimeout: 1 * time.Second,
+		WriteTimeout: 1 * time.Second,
+	}
+
+	go func() {
+		err := s.ListenAndServe()
 		if err != nil {
-			http.Error(w, "Oops error", http.StatusBadRequest)
-			return
+			log.Fatal(err)
+			os.Exit(1)
 		}
+	} ()
 
-		fmt.Fprintf(w, "Hello %s\n", data)
-	})
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, os.Kill)
+	
+	sig := <-c
+	l.Println("Got signal: ", sig)
 
-	http.HandleFunc("/goodbye", func(w http.ResponseWriter, r *http.Request) {
-		data, _ := ioutil.ReadAll(r.Body)
-		fmt.Fprintf(w, "Goodbye %s\n", data)
-	})
-
-	log.Fatal(http.ListenAndServe(":9090", nil))
+	ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
+	defer cancel()
+	s.Shutdown(ctx)
 }
