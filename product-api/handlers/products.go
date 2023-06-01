@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
+
 	"github.com/zakisk/microservice/product-api/data"
 )
 
@@ -41,9 +43,10 @@ func (p *Products) AddProduct(wr http.ResponseWriter, r *http.Request) {
 
 	prod := r.Context().Value(KeyProduct{}).(data.Product)
 	p.l.Printf("Product : %#v", prod)
-	data.AddProduct(&prod) 
+	data.AddProduct(&prod)
 }
 
+// handles http PUT request method
 func (p *Products) UpdateProduct(wr http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
@@ -64,6 +67,7 @@ func (p *Products) UpdateProduct(wr http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Middleware to validate Product
 func (p *Products) MiddlewareValidateProduct(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(wr http.ResponseWriter, r *http.Request) {
 		prod := data.Product{}
@@ -71,6 +75,18 @@ func (p *Products) MiddlewareValidateProduct(next http.Handler) http.Handler {
 		if err != nil {
 			p.l.Println("[ERROR] deserializing product")
 			http.Error(wr, "Unable to unmarshal data", http.StatusBadRequest)
+			return
+		}
+
+		//validate the product we've got in request
+		err = prod.Validate()
+		if err != nil {
+			p.l.Println("[ERROR] validating product")
+			http.Error(
+				wr,
+				fmt.Sprintf("Error validating product: %s", err),
+				http.StatusBadRequest,
+			)
 			return
 		}
 
