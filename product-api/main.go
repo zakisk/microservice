@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/go-openapi/runtime/middleware"
 
 	"github.com/zakisk/microservice/product-api/handlers"
 )
@@ -19,26 +20,34 @@ func main() {
 	//create the new handler
 	ph := handlers.NewProducts(l)
 
-
 	//creating our new ServeMux
 	sm := mux.NewRouter()
 	getRouter := sm.Methods(http.MethodGet).Subrouter()
-	getRouter.HandleFunc("/", ph.GetProducts)
-	
+	getRouter.HandleFunc("/", ph.GET)
+
 	putRouter := sm.Methods(http.MethodPut).Subrouter()
-	putRouter.HandleFunc("/{id:[0-9]+}", ph.UpdateProduct)
+	putRouter.HandleFunc("/{id:[0-9]+}", ph.PUT)
 	putRouter.Use(ph.MiddlewareValidateProduct)
 
 	postRouter := sm.Methods(http.MethodPost).Subrouter()
-	postRouter.HandleFunc("/", ph.AddProduct)
+	postRouter.HandleFunc("/", ph.POST)
 	postRouter.Use(ph.MiddlewareValidateProduct)
+
+	deleteRouter := sm.Methods(http.MethodDelete).Subrouter()
+	deleteRouter.HandleFunc("/products/{id:[0-9]+}", ph.DELETE)
+
+	opts := middleware.RedocOpts{SpecURL: "/swagger.yaml"}
+	sh := middleware.Redoc(opts, nil)
+
+	getRouter.Handle("/docs", sh)
+	getRouter.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 
 	//creating my own server in order to set the fields as per my requirement
 	s := &http.Server{
-		Addr: ":9090",
-		Handler: sm,
-		IdleTimeout: 120 * time.Second,
-		ReadTimeout: 1 * time.Second,
+		Addr:         ":9090",
+		Handler:      sm,
+		IdleTimeout:  120 * time.Second,
+		ReadTimeout:  1 * time.Second,
 		WriteTimeout: 1 * time.Second,
 	}
 
@@ -48,16 +57,16 @@ func main() {
 			log.Fatal(err)
 			os.Exit(1)
 		}
-	} ()
+	}()
 
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt)
 	signal.Notify(c, os.Kill)
-	
+
 	sig := <-c
 	l.Println("Got signal: ", sig)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	s.Shutdown(ctx)
 }

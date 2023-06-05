@@ -1,0 +1,87 @@
+basePath: /
+consumes:
+    - application/json
+definitions:
+    Product:
+        description: model class for product
+        properties:
+            description:
+                description: description of product
+                type: string
+                x-go-name: Description
+            id:
+                description: id of product
+                format: int64
+                type: integer
+                x-go-name: ID
+            name:
+                description: name of product
+                minLength: 2
+                type: string
+                x-go-name: Name
+            price:
+                description: price of product
+                format: float
+                minimum: 1
+                type: number
+                x-go-name: Price
+            sku:
+                description: unique identifier of the product
+                pattern: '[a-z]+-[a-z]+-[a-z]+'
+                type: string
+                x-go-name: SKU
+        required:
+            - id
+            - name
+            - price
+            - sku
+        type: object
+        x-go-package: github.com/zakisk/microservice/product-api/data
+host: localhost:9090
+info:
+    description: Documentation of our awesome API.
+    title: awesome.
+    version: 1.0.0
+paths:
+    /products:
+        get:
+            description: Returns a list of products
+            operationId: listProducts
+            responses:
+                "200":
+                    $ref: '#/responses/productsResponse'
+            tags:
+                - products
+    /products/{id}:
+        delete:
+            description: Deletes a product from database of given id
+            operationId: deleteProduct
+            parameters:
+                - description: The id of the product to delete it from the database
+                  format: int64
+                  in: path
+                  name: ID
+                  required: true
+                  type: integer
+            responses:
+                "201":
+                    $ref: '#/responses/noContentResponse'
+            tags:
+                - producs
+produces:
+    - application/json
+responses:
+    noContent:
+        description: ""
+    productsResponse:
+        description: A list of products being returned in the response
+        schema:
+            items:
+                $ref: '#/definitions/Product'
+            type: array
+schemes:
+    - http
+securityDefinitions:
+    basic:
+        type: basic
+swagger: "2.0"

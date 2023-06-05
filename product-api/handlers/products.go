@@ -1,20 +1,62 @@
+// Package classification awesome.
+//
+// Documentation of our awesome API.
+//
+//     Schemes: http
+//     BasePath: /
+//     Version: 1.0.0
+//     Host: localhost:9090
+//
+//     Consumes:
+//     - application/json
+//
+//     Produces:
+//     - application/json
+//
+//     Security:
+//     - basic
+//
+//    SecurityDefinitions:
+//    basic:
+//      type: basic
+//
+// swagger:meta
 package handlers
+
 
 import (
 	"context"
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
-
-	"github.com/gorilla/mux"
 
 	"github.com/zakisk/microservice/product-api/data"
 )
 
-// struct that gonna implement Handler
+// struct that implements Handler
 type Products struct {
 	l *log.Logger
+}
+
+
+// A list of products being returned in the response
+// swagger:response productsResponse
+type productsResponse struct {
+	// All products in the database
+	// in: body
+	Body []data.Product
+}
+
+
+// swagger:response noContent
+type productNoContent struct {}
+
+// swagger:parameters deleteProduct
+type productIDParameter struct {
+	// The id of the product to delete it from the database
+	// in: path
+	// required: true
+	ID int `json: "id"`
 }
 
 type KeyProduct struct{}
@@ -27,45 +69,9 @@ func NewProducts(l *log.Logger) *Products {
 	return &Products{l}
 }
 
-// handles http GET request for products
-func (p *Products) GetProducts(wr http.ResponseWriter, r *http.Request) {
-	p.l.Println("Products endpoint is called")
-	lp := data.GetProducts()
-	err := lp.ToJSON(wr)
-	if err != nil {
-		http.Error(wr, "Oops something went wrong", http.StatusInternalServerError)
-	}
-}
 
-// handles http POST request method
-func (p *Products) AddProduct(wr http.ResponseWriter, r *http.Request) {
-	p.l.Println("Handle GET Product")
 
-	prod := r.Context().Value(KeyProduct{}).(data.Product)
-	p.l.Printf("Product : %#v", prod)
-	data.AddProduct(&prod)
-}
 
-// handles http PUT request method
-func (p *Products) UpdateProduct(wr http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		http.Error(wr, "Invalid id", http.StatusBadRequest)
-	}
-
-	prod := (r.Context().Value(KeyProduct{}).(data.Product))
-	err = data.UpdateProduct(id, &prod)
-	if err == data.ErrorProductNotFound {
-		http.Error(wr, "Product not found", http.StatusNotFound)
-		return
-	}
-
-	if err != nil {
-		http.Error(wr, "Invalid id", http.StatusBadRequest)
-		return
-	}
-}
 
 // Middleware to validate Product
 func (p *Products) MiddlewareValidateProduct(next http.Handler) http.Handler {
