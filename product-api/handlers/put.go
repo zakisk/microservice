@@ -2,23 +2,19 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
-
-	"github.com/gorilla/mux"
 
 	"github.com/zakisk/microservice/product-api/data"
 )
 
-// handles http PUT request method
-func (p *Products) PUT(wr http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		http.Error(wr, "Invalid id", http.StatusBadRequest)
-	}
+// handles http Update request method
+// swagger:route PUT /products products updateProduct
+// swagger:response
+//	201: noContent
+//	404: 
+func (p *Products) Update(wr http.ResponseWriter, r *http.Request) {
 
 	prod := (r.Context().Value(KeyProduct{}).(data.Product))
-	err = data.UpdateProduct(id, &prod)
+	err := data.UpdateProduct(prod)
 	if err == data.ErrProductNotFound {
 		http.Error(wr, "Product not found", http.StatusNotFound)
 		return
@@ -28,4 +24,6 @@ func (p *Products) PUT(wr http.ResponseWriter, r *http.Request) {
 		http.Error(wr, "Invalid id", http.StatusBadRequest)
 		return
 	}
+
+	wr.WriteHeader(http.StatusNoContent)
 }

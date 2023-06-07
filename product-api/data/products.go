@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"regexp"
 	"time"
 
 	"github.com/go-playground/validator"
@@ -72,14 +71,7 @@ func (p *Product) Validate() error {
 	return validate.Struct(p)
 }
 
-func validateSKU(fl validator.FieldLevel) bool {
-	re := regexp.MustCompile("[a-z]+-[a-z]+-[a-z]+")
-	result := re.FindAllString(fl.Field().String(), -1)
-	if len(result) != 1 {
-		return false
-	}
-	return true
-}
+
 
 func AddProduct(prod *Product) {
 	prod.ID = getNextID()
@@ -87,14 +79,13 @@ func AddProduct(prod *Product) {
 }
 
 //Updates the product in the database
-func UpdateProduct(id int, prod *Product) error {
-	pos := findIndexByProductID(id)
+func UpdateProduct(prod Product) error {
+	pos := findIndexByProductID(prod.ID)
 	if pos == -1 {
 		return ErrProductNotFound
 	}
 
-	prod.ID = id
-	productList[pos] = prod
+	productList[pos] = &prod
 	return nil
 }
 

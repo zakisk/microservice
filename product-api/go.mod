@@ -8,6 +8,19 @@ require (
 )
 
 require (
+	github.com/fatih/color v1.13.0 // indirect
+	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/hashicorp/go-hclog v1.2.0 // indirect
+	github.com/mattn/go-colorable v0.1.12 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/nicholasjackson/building-microservices-youtube/currency v0.0.0-20200329100342-3c14bf3f378d // indirect
+	golang.org/x/net v0.10.0 // indirect
+	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
+	google.golang.org/grpc v1.55.0 // indirect
+	google.golang.org/protobuf v1.30.0 // indirect
+)
+
+require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/Masterminds/sprig/v3 v3.2.3 // indirect
@@ -43,6 +56,7 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
+	github.com/nicholasjackson/building-microservices-youtube/product-api v0.0.0-20211011132451-0cd586295712
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect

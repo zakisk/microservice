@@ -8,17 +8,19 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/gorilla/mux"
 
+	"github.com/zakisk/microservice/product-api/data"
 	"github.com/zakisk/microservice/product-api/handlers"
 )
 
 func main() {
 	l := log.New(os.Stdout, "product-api:", log.LstdFlags)
+	v := data.NewValidation()
 
 	//create the new handler
-	ph := handlers.NewProducts(l)
+	ph := handlers.NewProducts(l, v)
 
 	//creating our new ServeMux
 	sm := mux.NewRouter()
@@ -26,7 +28,7 @@ func main() {
 	getRouter.HandleFunc("/", ph.GET)
 
 	putRouter := sm.Methods(http.MethodPut).Subrouter()
-	putRouter.HandleFunc("/{id:[0-9]+}", ph.PUT)
+	putRouter.HandleFunc("/{id:[0-9]+}", ph.Update)
 	putRouter.Use(ph.MiddlewareValidateProduct)
 
 	postRouter := sm.Methods(http.MethodPost).Subrouter()

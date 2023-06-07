@@ -2,6 +2,13 @@ basePath: /
 consumes:
     - application/json
 definitions:
+    GenericError:
+        properties:
+            Message:
+                description: generic message for most of the errors
+                type: string
+        type: object
+        x-go-package: github.com/zakisk/microservice/product-api/handlers
     Product:
         description: model class for product
         properties:
@@ -37,6 +44,15 @@ definitions:
             - sku
         type: object
         x-go-package: github.com/zakisk/microservice/product-api/data
+    ValidationError:
+        description: ValidationError is a slice of json validation errors returned by validator
+        properties:
+            Messages:
+                items:
+                    type: string
+                type: array
+        type: object
+        x-go-package: github.com/zakisk/microservice/product-api/handlers
 host: localhost:9090
 info:
     description: Documentation of our awesome API.
@@ -50,19 +66,34 @@ paths:
             responses:
                 "200":
                     $ref: '#/responses/productsResponse'
+                "500":
+                    $ref: '#/responses/internalServerError'
+            tags:
+                - products
+        put:
+            operationId: updateProduct
+            parameters:
+                - description: |-
+                    Product data structure to Update or Create.
+                    Note: the id field is ignored by update and create operations
+                  in: body
+                  name: Body
+                  required: true
+                  schema:
+                    $ref: '#/definitions/Product'
+                - description: The id of the product for which the operation relates
+                  format: int64
+                  in: path
+                  name: id
+                  required: true
+                  type: integer
+                  x-go-name: ID
             tags:
                 - products
     /products/{id}:
         delete:
             description: Deletes a product from database of given id
             operationId: deleteProduct
-            parameters:
-                - description: The id of the product to delete it from the database
-                  format: int64
-                  in: path
-                  name: ID
-                  required: true
-                  type: integer
             responses:
                 "201":
                     $ref: '#/responses/noContentResponse'
@@ -71,10 +102,22 @@ paths:
 produces:
     - application/json
 responses:
-    noContent:
-        description: ""
+    errorResponse:
+        description: Generic error message returned as a string
+        schema:
+            $ref: '#/definitions/GenericError'
+    errorValidation:
+        description: Validation errors defined as an array of strings
+        schema:
+            $ref: '#/definitions/ValidationError'
+    noContentResponse:
+        description: No content is returned by this API endpoint
+    productResponse:
+        description: Data structure representing a single product
+        schema:
+            $ref: '#/definitions/Product'
     productsResponse:
-        description: A list of products being returned in the response
+        description: A list of products
         schema:
             items:
                 $ref: '#/definitions/Product'
