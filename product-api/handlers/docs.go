@@ -45,6 +45,15 @@ type errorValidationWrapper struct {
 	Body ValidationError
 }
 
+
+// Internal Server error when something went wrong at server end
+//swagger:response internalServerError
+type internalServerError struct {
+	// Description of the error
+	// in: body
+	Body GenericError
+}
+
 // A list of products
 // swagger:response productsResponse
 type productsResponseWrapper struct {
@@ -75,10 +84,18 @@ type productParamsWrapper struct {
 	Body data.Product
 }
 
-// swagger:parameters updateProduct
+// swagger:parameters deleteProduct
 type productIDParamsWrapper struct {
 	// The id of the product for which the operation relates
 	// in: path
 	// required: true
 	ID int `json:"id"`
+}
+
+
+//swagger:response notFound
+type productNotFoundError struct {
+	// Description of the error
+	// in: body
+	Body GenericError
 }

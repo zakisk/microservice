@@ -8,9 +8,8 @@ import (
 
 // handles http Update request method
 // swagger:route PUT /products products updateProduct
-// swagger:response
-//	201: noContent
-//	404: 
+// Responses:
+//	201: noContentResponse
 func (p *Products) Update(wr http.ResponseWriter, r *http.Request) {
 
 	prod := (r.Context().Value(KeyProduct{}).(data.Product))

@@ -8,29 +8,32 @@ import (
 	"github.com/zakisk/microservice/product-api/data"
 )
 
-//swagger:route DELETE /products/{id} producs deleteProduct
+//swagger:route DELETE /products/{id} products deleteProduct
 // Deletes a product from database of given id
 // responses:
 //  	201: noContentResponse
-
-func (p *Products) DELETE(wr http.ResponseWriter, r *http.Request) {
+//		404: notFound
+//		500: internalServerError
+func (p *Products) DELETE(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 
 	if err != nil {
-		http.Error(wr, "invalid request", http.StatusBadRequest)
+		http.Error(rw, "invalid request", http.StatusBadRequest)
 		return
 	}
 
 	err = data.DeleteProduct(id)
 
 	if err == data.ErrProductNotFound {
-		http.Error(wr, "Product not found", http.StatusNotFound)
+		rw.WriteHeader(http.StatusNotFound)
+		data.ToJSON(&GenericError{Message: err.Error()}, rw)
 		return
 	}
 
 	if err != nil {
-		http.Error(wr, "Product not found", http.StatusInternalServerError)
+		rw.WriteHeader(http.StatusInternalServerError)
+		data.ToJSON(&GenericError{Message: err.Error()}, rw)
 		return
 	}
 }
