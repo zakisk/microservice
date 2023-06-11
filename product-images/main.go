@@ -52,12 +52,14 @@ func main() {
 	ph.HandleFunc("/", fh.UploadMultipart)
 
 	ch := gohandlers.CORS(gohandlers.AllowedOrigins([]string{"*"}))
+	gm := handlers.GzipHandler{}
 
 	gh := sm.Methods(http.MethodGet).Subrouter()
 	gh.Handle(
 		"/images/{id:[0-9]+}/{filename:[a-zA-Z]+\\.[a-z]{3}}",
 		http.StripPrefix("/images", http.FileServer(http.Dir(*basePath))),
 	)
+	gh.Use(gm.GzipMiddleware)
 
 	// create a new server
 	s := http.Server{
