@@ -10,7 +10,9 @@ import (
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
+	"google.golang.org/grpc"
 
+	protos "github.com/zakisk/microservice/currency/protos/currency"
 	"github.com/zakisk/microservice/product-api/data"
 	"github.com/zakisk/microservice/product-api/handlers"
 )
@@ -19,13 +21,23 @@ func main() {
 	l := log.New(os.Stdout, "product-api:", log.LstdFlags)
 	v := data.NewValidation()
 
+	conn, err := grpc.Dial("localhost:9092", grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
+
+	defer conn.Close()
+
+	cc := protos.NewCurrencyClient(conn)
+
 	//create the new handler
-	ph := handlers.NewProducts(l, v)
+	ph := handlers.NewProducts(l, v, cc)
 
 	//creating our new ServeMux
 	sm := mux.NewRouter()
 	getRouter := sm.Methods(http.MethodGet).Subrouter()
-	getRouter.HandleFunc("/products", ph.GET)
+	getRouter.HandleFunc("/products", ph.ListProducts)
+	getRouter.HandleFunc("/products/{id:[0-9]+}", ph.ListSingelProduct)
 
 	putRouter := sm.Methods(http.MethodPut).Subrouter()
 	putRouter.HandleFunc("/products", ph.Update)

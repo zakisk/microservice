@@ -1,10 +1,7 @@
 package data
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"time"
 
 	"github.com/go-playground/validator"
@@ -49,12 +46,6 @@ type Product struct {
 //ErrProductNotFound is raised when product is not found in database
 var ErrProductNotFound = fmt.Errorf("Product not found")
 
-// get product struct from JSON
-func (p *Product) FromJSON(r io.Reader) error {
-	d := json.NewDecoder(r)
-	return d.Decode(p)
-}
-
 type Products []*Product
 
 // return static products
@@ -90,6 +81,16 @@ func UpdateProduct(prod Product) error {
 }
 
 
+func GetProductById(id int) (Product, error) {
+	i := findIndexByProductID(id)
+	if 1 == -1 {
+		return Product{}, ErrProductNotFound
+	}
+
+	return *productList[i], nil
+}
+
+
 func DeleteProduct(id int) error {
 	i := findIndexByProductID(id)
 	if i == -1 {
@@ -114,12 +115,6 @@ func findIndexByProductID(id int) int {
 func getNextID() int {
 	last := productList[len(productList)-1]
 	return last.ID + 1
-}
-
-// encodes products and writes them directly to http.ResponseWriter
-func (p *Products) ToJSON(wr http.ResponseWriter) error {
-	e := json.NewEncoder(wr)
-	return e.Encode(p)
 }
 
 var productList = []*Product{

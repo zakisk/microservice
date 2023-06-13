@@ -5,12 +5,14 @@ import (
 	"log"
 
 	"github.com/zakisk/microservice/product-api/data"
+	protos "github.com/zakisk/microservice/currency/protos/currency"
 )
 
 // struct that implements Handler
 type Products struct {
 	l *log.Logger
 	v *data.Validation
+	cc protos.CurrencyClient
 }
 
 type KeyProduct struct{}
@@ -19,8 +21,8 @@ type KeyProduct struct{}
 // It follows the dependency injection model to allow flexibility
 // and increase testability by injecting the logger dependency.
 // The logger can be replaced with a mock logger during testing.
-func NewProducts(l *log.Logger, v *data.Validation) *Products {
-	return &Products{l, v}
+func NewProducts(l *log.Logger, v *data.Validation, cc protos.CurrencyClient) *Products {
+	return &Products{l, v, cc}
 }
 
 

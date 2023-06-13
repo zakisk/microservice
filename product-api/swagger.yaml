@@ -3,7 +3,7 @@ consumes:
     - application/json
 definitions:
     GenericError:
-        description: GenericError GenericError generic error
+        description: GenericError GenericError GenericError generic error
         properties:
             Message:
                 description: generic message for most of the errors
@@ -11,7 +11,7 @@ definitions:
         type: object
         x-go-package: github.com/zakisk/microservice/product-api/sdk/models
     Product:
-        description: Product Product model class for product
+        description: Product Product Product model class for product
         properties:
             description:
                 description: description of product
@@ -46,7 +46,7 @@ definitions:
         type: object
         x-go-package: github.com/zakisk/microservice/product-api/sdk/models
     ValidationError:
-        description: ValidationError ValidationError ValidationError is a slice of json validation errors returned by validator
+        description: ValidationError ValidationError ValidationError ValidationError is a slice of json validation errors returned by validator
         properties:
             Messages:
                 description: messages
@@ -64,10 +64,10 @@ paths:
     /products:
         get:
             description: Returns a list of products
-            operationId: listProducts
+            operationId: listSingleProducts
             responses:
                 "200":
-                    $ref: '#/responses/productsResponse'
+                    $ref: '#/responses/productResponse'
                 "500":
                     $ref: '#/responses/internalServerError'
             tags:
@@ -103,6 +103,18 @@ paths:
             responses:
                 "201":
                     $ref: '#/responses/noContentResponse'
+                "404":
+                    $ref: '#/responses/notFound'
+                "500":
+                    $ref: '#/responses/internalServerError'
+            tags:
+                - products
+        get:
+            description: Returns a list of products
+            operationId: listProducts
+            responses:
+                "200":
+                    $ref: '#/responses/productsResponse'
                 "404":
                     $ref: '#/responses/notFound'
                 "500":
