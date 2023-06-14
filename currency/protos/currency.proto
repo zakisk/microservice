@@ -19,7 +19,7 @@ message RateRequest {
 // Response of GetRate method after currency conversion
 message RateResponse {
     // the resulting rate
-    float Rate = 1;
+    double Rate = 1;
 }
 
 // list of currencies

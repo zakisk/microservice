@@ -11,7 +11,7 @@ import (
 
 // Model for exchanging rates
 type ExchangeRates struct {
-	log hclog.Logger
+	log   hclog.Logger
 	rates map[string]float64
 }
 
@@ -22,6 +22,19 @@ func NewExchangeRates(log hclog.Logger) (*ExchangeRates, error) {
 	return er, err
 }
 
+func (e *ExchangeRates) GetRate(base, dest string) (float64, error) {
+	br, ok := e.rates[base]
+	if !ok {
+		return 0, fmt.Errorf("Rate isn't found for currency %s", base)
+	}
+
+	dr, ok := e.rates[dest]
+	if !ok {
+		return 0, fmt.Errorf("Rate isn't found for currency %s", dest)
+	}
+
+	return dr / br, nil
+}
 
 func (e *ExchangeRates) getRates() error {
 	resp, err := http.DefaultClient.Get("https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml")
@@ -32,9 +45,12 @@ func (e *ExchangeRates) getRates() error {
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("Expected status code is 200 but got %d", resp.StatusCode)
 	}
-	resp.Body.Close()
+	defer resp.Body.Close()
 	md := &Cubes{}
-	xml.NewDecoder(resp.Body).Decode(md)
+	err = xml.NewDecoder(resp.Body).Decode(&md)
+	if err != nil {
+		return err
+	}
 	for _, cube := range md.CubeData {
 		r, err := strconv.ParseFloat(cube.Rate, 64)
 		if err != nil {
@@ -46,16 +62,11 @@ func (e *ExchangeRates) getRates() error {
 	return nil
 }
 
-
-
 type Cubes struct {
 	CubeData []Cube `xml:"Cube>Cube>Cube"`
 }
 
-
 type Cube struct {
 	Currency string `xml:"currency,attr"`
-	Rate string `xml:"rate,attr"`
+	Rate     string `xml:"rate,attr"`
 }
-
-

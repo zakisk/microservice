@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"github.com/go-openapi/runtime/middleware"
+	gohandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
 
 	protos "github.com/zakisk/microservice/currency/protos/currency"
@@ -18,7 +20,7 @@ import (
 )
 
 func main() {
-	l := log.New(os.Stdout, "product-api:", log.LstdFlags)
+	l := hclog.Default()
 	v := data.NewValidation()
 
 	conn, err := grpc.Dial("localhost:9092", grpc.WithInsecure())
@@ -30,13 +32,20 @@ func main() {
 
 	cc := protos.NewCurrencyClient(conn)
 
+	// create data.ProductsDB instance
+	pdb := data.NewProductsDB(cc, l)
+
 	//create the new handler
-	ph := handlers.NewProducts(l, v, cc)
+	ph := handlers.NewProducts(l, v, pdb)
 
 	//creating our new ServeMux
 	sm := mux.NewRouter()
 	getRouter := sm.Methods(http.MethodGet).Subrouter()
+
+	getRouter.HandleFunc("/products", ph.ListProducts).Queries("currency", "{[A-Z]{3}}")
 	getRouter.HandleFunc("/products", ph.ListProducts)
+
+	getRouter.HandleFunc("/products/{id:[0-9]+}", ph.ListSingelProduct).Queries("currency", "{[A-Z]{3}}")
 	getRouter.HandleFunc("/products/{id:[0-9]+}", ph.ListSingelProduct)
 
 	putRouter := sm.Methods(http.MethodPut).Subrouter()
@@ -56,10 +65,13 @@ func main() {
 	getRouter.Handle("/docs", sh)
 	getRouter.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 
+	ch := gohandlers.CORS(gohandlers.AllowedOrigins([]string{"*"}))
+
 	//creating my own server in order to set the fields as per my requirement
 	s := &http.Server{
 		Addr:         ":9090",
-		Handler:      sm,
+		Handler:      ch(sm),
+		ErrorLog:     l.StandardLogger(&hclog.StandardLoggerOptions{}),
 		IdleTimeout:  120 * time.Second,
 		ReadTimeout:  1 * time.Second,
 		WriteTimeout: 1 * time.Second,
@@ -78,7 +90,7 @@ func main() {
 	signal.Notify(c, os.Kill)
 
 	sig := <-c
-	l.Println("Got signal: ", sig)
+	l.Info("Got signal: ", sig)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

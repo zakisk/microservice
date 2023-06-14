@@ -2,9 +2,7 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 
-	"github.com/gorilla/mux"
 	"github.com/zakisk/microservice/product-api/data"
 )
 
@@ -15,15 +13,9 @@ import (
 //		404: notFound
 //		500: internalServerError
 func (p *Products) DELETE(rw http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
+	id := getProductId(r)
 
-	if err != nil {
-		http.Error(rw, "invalid request", http.StatusBadRequest)
-		return
-	}
-
-	err = data.DeleteProduct(id)
+	err := p.productsDB.DeleteProduct(id)
 
 	if err == data.ErrProductNotFound {
 		rw.WriteHeader(http.StatusNotFound)

@@ -92,6 +92,15 @@ type productIDParamsWrapper struct {
 	ID int `json:"id"`
 }
 
+// swagger:parameters listProducts listSingleProduct
+type productQueryParam struct {
+	// Currency used when returning the price of the product,
+	// when not specified currency is returned in GBP.
+	// in: query
+	// required: false
+	Currency string
+}
+
 
 //swagger:response notFound
 type productNotFoundError struct {

@@ -12,7 +12,7 @@ func (p *Products) MiddlewareValidateProduct(next http.Handler) http.Handler {
 		prod := data.Product{}
 		err := data.FromJSON(prod, r.Body)
 		if err != nil {
-			p.l.Println("[ERROR] deserializing product")
+			p.l.Error("deserializing product")
 			
 			rw.WriteHeader(http.StatusBadRequest)
 			data.ToJSON(&GenericError{Message: err.Error()}, rw)
@@ -22,7 +22,7 @@ func (p *Products) MiddlewareValidateProduct(next http.Handler) http.Handler {
 		//validate the product we've got in request
 		errs := p.v.Validate(prod)
 		if len(errs) != 0 {
-			p.l.Println("[ERROR] validating product")
+			p.l.Error("validating product")
 			rw.WriteHeader(http.StatusUnprocessableEntity)
 			data.ToJSON(&ValidationError{Messages: errs.Errors()}, rw)
 			return

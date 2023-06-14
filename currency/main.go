@@ -6,6 +6,7 @@ import (
 	"os/signal"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/zakisk/microservice/currency/data"
 	protos "github.com/zakisk/microservice/currency/protos/currency"
 	"github.com/zakisk/microservice/currency/server"
 	"google.golang.org/grpc"
@@ -15,11 +16,18 @@ import (
 func main() {
 	log := hclog.Default()
 
+	//crate new data.ExchangeRates instance
+	er, err := data.NewExchangeRates(log)
+
+	if err != nil {
+		log.Error("Unable to create exchange rate instance", "error", err)
+	}
+
 	// creating new gRPC server
 	gs := grpc.NewServer()
 
 	// creating  new currency server
-	cs := server.NewCurrency(log)
+	cs := server.NewCurrency(er, log)
 
 	// registering gRPC service with reflection
 	reflection.Register(gs)

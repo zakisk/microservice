@@ -8,9 +8,9 @@ import (
 
 // handles http POST request method
 func (p *Products) POST(wr http.ResponseWriter, r *http.Request) {
-	p.l.Println("Handle GET Product")
+	p.l.Debug("Handle GET Product")
 
 	prod := r.Context().Value(KeyProduct{}).(data.Product)
-	p.l.Printf("Product : %#v", prod)
-	data.AddProduct(&prod)
+	p.l.Info("Product : %#v", prod)
+	p.productsDB.AddProduct(prod)
 }

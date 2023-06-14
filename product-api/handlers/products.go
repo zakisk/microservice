@@ -2,17 +2,19 @@ package handlers
 
 import (
 	"fmt"
-	"log"
+	"net/http"
+	"strconv"
 
+	"github.com/gorilla/mux"
+	"github.com/hashicorp/go-hclog"
 	"github.com/zakisk/microservice/product-api/data"
-	protos "github.com/zakisk/microservice/currency/protos/currency"
 )
 
 // struct that implements Handler
 type Products struct {
-	l *log.Logger
-	v *data.Validation
-	cc protos.CurrencyClient
+	l          hclog.Logger
+	v          *data.Validation
+	productsDB *data.ProductsDB
 }
 
 type KeyProduct struct{}
@@ -21,21 +23,33 @@ type KeyProduct struct{}
 // It follows the dependency injection model to allow flexibility
 // and increase testability by injecting the logger dependency.
 // The logger can be replaced with a mock logger during testing.
-func NewProducts(l *log.Logger, v *data.Validation, cc protos.CurrencyClient) *Products {
-	return &Products{l, v, cc}
+func NewProducts(l hclog.Logger, v *data.Validation, pdb *data.ProductsDB) *Products {
+	return &Products{l, v, pdb}
 }
 
-
 var ErrInvalidProductPath = fmt.Errorf("specified path is invalid, path should be /products/{id}")
-
 
 type GenericError struct {
 	// generic message for most of the errors
 	Message string `json: "message"`
 }
 
-
 // ValidationError is a slice of json validation errors returned by validator
 type ValidationError struct {
 	Messages []string `json: "messages"`
 }
+
+
+// gets id from mux variabels
+func getProductId(r *http.Request) int {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	
+	if err != nil {
+		//this must not take place
+		panic(err)
+	}
+
+	return id
+}
+  

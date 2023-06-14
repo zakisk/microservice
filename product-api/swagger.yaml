@@ -64,7 +64,14 @@ paths:
     /products:
         get:
             description: Returns a list of products
-            operationId: listSingleProducts
+            operationId: listProducts
+            parameters:
+                - description: |-
+                    Currency used when returning the price of the product,
+                    when not specified currency is returned in GBP.
+                  in: query
+                  name: Currency
+                  type: string
             responses:
                 "200":
                     $ref: '#/responses/productResponse'
@@ -111,10 +118,10 @@ paths:
                 - products
         get:
             description: Returns a list of products
-            operationId: listProducts
+            operationId: listSingleProducts
             responses:
                 "200":
-                    $ref: '#/responses/productsResponse'
+                    $ref: '#/responses/productResponse'
                 "404":
                     $ref: '#/responses/notFound'
                 "500":
