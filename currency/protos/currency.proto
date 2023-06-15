@@ -2,9 +2,15 @@ syntax = "proto3";
 
 option go_package = "./currency";
 
+import "google/rpc/status.proto";
+
 // Currency service in order to convert currency
 service Currency {
+    // method to get rate between two currencies
     rpc GetRate(RateRequest) returns (RateResponse);
+
+    // streaming method to get continueous rate data
+    rpc SubscribeRates(stream RateRequest) returns (stream StreamingRateResponse);
 }
 
 
@@ -18,8 +24,20 @@ message RateRequest {
 
 // Response of GetRate method after currency conversion
 message RateResponse {
+    // Base currencies that has to be converted into destination
+    Currencies Base = 1;
+    // Destination currency
+    Currencies Destination = 2;
     // the resulting rate
-    double Rate = 1;
+    double Rate = 3;
+}
+
+message StreamingRateResponse {
+    // response for bidirenctional streaming of data
+    oneof response {
+        RateResponse rate_response = 1;
+        google.rpc.Status error = 2;
+    }
 }
 
 // list of currencies

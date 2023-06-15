@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	protos "github.com/zakisk/microservice/currency/protos/currency"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/go-playground/validator"
 )
@@ -52,23 +54,50 @@ var ErrProductNotFound = fmt.Errorf("Product not found")
 
 type Products []*Product
 
-
 // type to handle product CURD operations
 type ProductsDB struct {
 	currency protos.CurrencyClient
 	log      hclog.Logger
+	rates    map[string]float64
+	client   protos.Currency_SubscribeRatesClient
 }
-
 
 func NewProductsDB(c protos.CurrencyClient, l hclog.Logger) *ProductsDB {
-	return &ProductsDB{c, l}
+	pdb := &ProductsDB{c, l, make(map[string]float64), nil}
+	go pdb.handleUpdates()
+
+	return pdb
 }
 
+func (p *ProductsDB) handleUpdates() {
+	client, err := p.currency.SubscribeRates(context.Background())
+	if err != nil {
+		p.log.Error("Unable to subscirbe for rate", "error", err)
+	}
+
+	p.client = client
+
+	for {
+		rr, err := client.Recv()
+		if grpcErr := rr.GetError(); grpcErr != nil {
+			p.log.Error("Error while subscribing for rates", "error", grpcErr)
+		}
+
+		if resp := rr.GetRateResponse(); resp != nil {
+			p.log.Info("Received updated rate from server", "destination", resp.GetDestination().String())
+			if err != nil {
+				p.log.Error("Unable to subscirbe for rate", "error", err)
+			}
+			p.rates[resp.Destination.String()] = resp.Rate
+		}
+	}
+
+}
 
 // return static products
 func (p *ProductsDB) GetProducts(currency string) (Products, error) {
 	if currency == "" {
-		return productList, nil	
+		return productList, nil
 	}
 
 	rate, err := p.getRate(currency)
@@ -98,7 +127,7 @@ func (p *Product) Validate() error {
 }
 
 func (p *ProductsDB) AddProduct(prod Product) {
-	maxID := productList[len(productList) - 1].ID
+	maxID := productList[len(productList)-1].ID
 	prod.ID = maxID + 1
 	productList = append(productList, &prod)
 }
@@ -157,17 +186,43 @@ func findIndexByProductID(id int) int {
 	return -1
 }
 
-
 func (p *ProductsDB) getRate(destination string) (float64, error) {
+	// if rates are already cached then return cached rate
+	if r, ok := p.rates[destination]; ok {
+		return r, nil
+	}
+
 	rr := &protos.RateRequest{
 		Base:        protos.Currencies(protos.Currencies_value["USD"]),
 		Destination: protos.Currencies(protos.Currencies_value[destination]),
 	}
 
+	// get initial rate
 	res, err := p.currency.GetRate(context.Background(), rr)
+
+	if err != nil {
+		if s, ok := status.FromError(err); ok {
+			md := s.Details()[0].(*protos.RateRequest)
+			if s.Code() == codes.InvalidArgument {
+				return -1, fmt.Errorf(
+					"Unable to get rate from server, Base: %s and Destination: %s are same",
+					rr.Base.String(),
+					rr.Destination.String(),
+				)
+			}
+			return -1, fmt.Errorf("Unabel to get rate, base: %s, destination: %s", md.Base.String(), md.Destination.String())
+		}
+
+		return -1, err
+	}
+
+	p.rates[destination] = res.Rate
+
+	//subscribe for updates
+	p.client.Send(rr)
+
 	return res.Rate, err
 }
-
 
 var productList = []*Product{
 	&Product{
