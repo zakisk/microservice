@@ -150,7 +150,7 @@ func (c *Currency) SubscribeRates(csr protos.Currency_SubscribeRatesServer) erro
 
 func (c *Currency) mustEmbedUnimplementedCurrencyServer() {}
 
-{
+/* {
 	"Base": "JPY",
 	"Destination": "BGN"
-}
+} */
