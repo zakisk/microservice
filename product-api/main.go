@@ -23,7 +23,9 @@ func main() {
 	l := hclog.Default()
 	v := data.NewValidation()
 
-	conn, err := grpc.Dial("localhost:9092", grpc.WithInsecure())
+	container := os.Getenv("CURRENCY_CONTAINER")
+
+	conn, err := grpc.Dial(container + ":9092", grpc.WithInsecure())
 	if err != nil {
 		panic(err)
 	}

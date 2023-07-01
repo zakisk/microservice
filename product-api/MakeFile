@@ -1,2 +1,5 @@
 swagger:
 	swagger generate spec --output=./swagger.yaml --work-dir=. --scan-models
+
+hello:
+	echo "hello zaki"

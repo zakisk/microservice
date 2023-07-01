@@ -1,0 +1,24 @@
+version: '2'
+services:
+  currency:
+      image: currency:v1.0
+      ports:
+        - "9092:9092"
+      container_name: currency_container  
+      networks:
+        - api-network
+
+  product-api:
+      image: product-api:v1.0
+      ports:
+        - "9090:9090"
+      container_name: product_container
+      depends_on:
+        - currency
+      networks:
+        - api-network 
+      env_file:
+        - app.env 
+
+networks:
+    api-network:

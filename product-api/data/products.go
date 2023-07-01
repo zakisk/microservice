@@ -81,14 +81,14 @@ func (p *ProductsDB) handleUpdates() {
 		rr, err := client.Recv()
 		if grpcErr := rr.GetError(); grpcErr != nil {
 			p.log.Error("Error while subscribing for rates", "error", grpcErr)
-		}
-
-		if resp := rr.GetRateResponse(); resp != nil {
-			p.log.Info("Received updated rate from server", "destination", resp.GetDestination().String())
-			if err != nil {
-				p.log.Error("Unable to subscirbe for rate", "error", err)
+		} else {
+			if resp := rr.GetRateResponse(); resp != nil {
+				p.log.Info("Received updated rate from server", "destination", resp.GetDestination().String())
+				if err != nil {
+					p.log.Error("Unable to subscirbe for rate", "error", err)
+				}
+				p.rates[resp.Destination.String()] = resp.Rate
 			}
-			p.rates[resp.Destination.String()] = resp.Rate
 		}
 	}
 
