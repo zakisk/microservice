@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -23,9 +24,13 @@ func main() {
 	l := hclog.Default()
 	v := data.NewValidation()
 
-	container := os.Getenv("CURRENCY_CONTAINER")
+	currencyServiceName := "currency-service"
 
-	conn, err := grpc.Dial(container + ":9092", grpc.WithInsecure())
+	// Resolve the currency service using the Kubernetes DNS-based service discovery
+	currencyServiceAddress := fmt.Sprintf("%s.meshery.svc.cluster.local:9092", currencyServiceName)
+
+	// Connect to the gRPC server running in the currency service
+	conn, err := grpc.Dial(currencyServiceAddress, grpc.WithInsecure())
 	if err != nil {
 		panic(err)
 	}

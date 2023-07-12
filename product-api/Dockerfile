@@ -16,9 +16,10 @@ RUN go get github.com/gorilla/handlers
 RUN go get github.com/hashicorp/go-hclog
 RUN go get github.com/zakisk/microservice/currency/protos/currency
 RUN go get google.golang.org/grpc
-RUN go mod download
 RUN go get google.golang.org/grpc/codes
 RUN go get google.golang.org/grpc/status
+
+RUN go mod download
 
 #0 run the application
 CMD go run main.go
